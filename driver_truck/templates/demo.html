@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELD API Demo - Interactive Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #343a40;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .nav {
+            background: #495057;
+            padding: 0;
+        }
+        
+        .nav button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .nav button:hover,
+        .nav button.active {
+            background: #6c757d;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .api-demo {
+            display: none;
+        }
+        
+        .api-demo.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .status.online {
+            background: #28a745;
+        }
+        
+        .status.offline {
+            background: #dc3545;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ ELD API Interactive Demo</h1>
+            <p>Test the Electronic Logging Device API endpoints</p>
+            <span id="apiStatus" class="status">🔄 Checking...</span>
+        </div>
+        
+        <div class="nav">
+            <button class="nav-btn active" data-section="drivers">👥 Drivers</button>
+            <button class="nav-btn" data-section="vehicles">🚚 Vehicles</button>
+            <button class="nav-btn" data-section="logs">📊 Duty Logs</button>
+            <button class="nav-btn" data-section="trips">🛣️ Trips</button>
+        </div>
+        
+        <div class="content">
+            <!-- Drivers Demo -->
+            <div id="drivers" class="api-demo active">
+                <h2>👥 Drivers Management</h2>
+                <div class="grid">
+                    <div>
+                        <h3>Create Driver</h3>
+                        <form id="driverForm">
+                            <div class="form-group">
+                                <label>Username:</label>
+                                <input type="text" id="driverUsername" required>
+                            </div>
+                            <div class="form-group">
+                                <label>First Name:</label>
+                                <input type="text" id="driverFirstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name:</label>
+                                <input type="text" id="driverLastName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email:</label>
+                                <input type="email" id="driverEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label>License Number:</label>
+                                <input type="text" id="driverLicense" required>
+                            </div>
+                            <button type="submit" class="btn">Create Driver</button>
+                            <button type="button" class="btn btn-success" onclick="fetchDrivers()">Get All Drivers</button>
+                        </form>
+                    </div>
+                    <div>
+                        <h3>API Response</h3>
+                        <div id="driversResponse" class="response">Click "Get All Drivers" to see current drivers...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vehicles Demo -->
+            <div id="vehicles" class="api-demo">
+                <h2>🚚 Vehicles Management</h2>
+                <div class="grid">
+                    <div>
+                        <h3>Add Vehicle</h3>
+                        <form id="vehicleForm">
+                            <div class="form-group">
+                                <label>License Plate:</label>
+                                <input type="text" id="vehiclePlate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Make:</label>
+                                <input type="text" id="vehicleMake" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Model:</label>
+                                <input type="text" id="vehicleModel" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Year:</label>
+                                <input type="number" id="vehicleYear" required>
+                            </div>
+                            <div class="form-group">
+                                <label>VIN:</label>
+                                <input type="text" id="vehicleVin" required>
+                            </div>
+                            <button type="submit" class="btn">Add Vehicle</button>
+                            <button type="button" class="btn btn-success" onclick="fetchVehicles()">Get All Vehicles</button>
+                        </form>
+                    </div>
+                    <div>
+                        <h3>API Response</h3>
+                        <div id="vehiclesResponse" class="response">Click "Get All Vehicles" to see current vehicles...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Duty Logs Demo -->
+            <div id="logs" class="api-demo">
+                <h2>📊 Duty Logs Management</h2>
+                <div class="grid">
+                    <div>
+                        <h3>Create Duty Log</h3>
+                        <form id="logForm">
+                            <div class="form-group">
+                                <label>Driver ID:</label>
+                                <input type="number" id="logDriverId" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Status:</label>
+                                <select id="logStatus" required>
+                                    <option value="on_duty">On Duty</option>
+                                    <option value="driving">Driving</option>
+                                    <option value="sleeper_berth">Sleeper Berth</option>
+                                    <option value="off_duty">Off Duty</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Location:</label>
+                                <input type="text" id="logLocation" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Notes:</label>
+                                <textarea id="logNotes" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn">Create Log</button>
+                            <button type="button" class="btn btn-success" onclick="fetchLogs()">Get All Logs</button>
+                        </form>
+                    </div>
+                    <div>
+                        <h3>API Response</h3>
+                        <div id="logsResponse" class="response">Click "Get All Logs" to see current duty logs...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Trips Demo -->
+            <div id="trips" class="api-demo">
+                <h2>🛣️ Trips Management</h2>
+                <div class="grid">
+                    <div>
+                        <h3>Create Trip</h3>
+                        <form id="tripForm">
+                            <div class="form-group">
+                                <label>Driver ID:</label>
+                                <input type="number" id="tripDriverId" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Vehicle ID:</label>
+                                <input type="number" id="tripVehicleId" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Origin:</label>
+                                <input type="text" id="tripOrigin" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Destination:</label>
+                                <input type="text" id="tripDestination" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Planned Distance (miles):</label>
+                                <input type="number" step="0.1" id="tripDistance" required>
+                            </div>
+                            <button type="submit" class="btn">Create Trip</button>
+                            <button type="button" class="btn btn-success" onclick="fetchTrips()">Get All Trips</button>
+                        </form>
+                    </div>
+                    <div>
+                        <h3>API Response</h3>
+                        <div id="tripsResponse" class="response">Click "Get All Trips" to see current trips...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        // API status check
+        async function checkApiStatus() {
+            try {
+                const response = await fetch('/api/status/');
+                if (response.ok) {
+                    document.getElementById('apiStatus').className = 'status online';
+                    document.getElementById('apiStatus').textContent = '🟢 API Online';
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                document.getElementById('apiStatus').className = 'status offline';
+                document.getElementById('apiStatus').textContent = '🔴 API Offline';
+            }
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all buttons and sections
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.api-demo').forEach(s => s.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding section
+                this.classList.add('active');
+                document.getElementById(this.dataset.section).classList.add('active');
+            });
+        });
+
+        // API Fetch functions
+        async function fetchDrivers() {
+            try {
+                const response = await fetch('/api/drivers/drivers/');
+                const data = await response.json();
+                document.getElementById('driversResponse').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('driversResponse').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function fetchVehicles() {
+            try {
+                const response = await fetch('/api/drivers/vehicles/');
+                const data = await response.json();
+                document.getElementById('vehiclesResponse').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('vehiclesResponse').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/logs/duty-logs/');
+                const data = await response.json();
+                document.getElementById('logsResponse').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('logsResponse').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function fetchTrips() {
+            try {
+                const response = await fetch('/api/trips/trips/');
+                const data = await response.json();
+                document.getElementById('tripsResponse').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('tripsResponse').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        // Form submissions
+        document.getElementById('driverForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = {
+                username: document.getElementById('driverUsername').value,
+                first_name: document.getElementById('driverFirstName').value,
+                last_name: document.getElementById('driverLastName').value,
+                email: document.getElementById('driverEmail').value,
+                license_number: document.getElementById('driverLicense').value,
+                password: 'defaultpass123' // Default password for demo
+            };
+
+            try {
+                const response = await fetch('/api/drivers/drivers/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                document.getElementById('driversResponse').textContent = JSON.stringify(result, null, 2);
+                
+                if (response.ok) {
+                    this.reset();
+                    fetchDrivers(); // Refresh the list
+                }
+            } catch (error) {
+                document.getElementById('driversResponse').textContent = 'Error: ' + error.message;
+            }
+        });
+
+        // Initialize
+        checkApiStatus();
+        setInterval(checkApiStatus, 30000); // Check every 30 seconds
+    </script>
+</body>
+</html>
